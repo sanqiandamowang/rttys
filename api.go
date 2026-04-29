@@ -10,9 +10,11 @@ import (
 	"net"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/zhaojh329/rttys/v5/db"
 	"github.com/zhaojh329/rttys/v5/utils"
 
 	"github.com/fanjindong/go-cache"
@@ -72,6 +74,8 @@ func (srv *RttyServer) ListenAPI() error {
 	authorized.GET("/groups", a.handleGroups)
 	authorized.GET("/devs", a.handleDevs)
 	authorized.GET("/dev/:devid", a.handleDev)
+	authorized.GET("/history/:devid", a.handleHistory)
+	authorized.GET("/history", a.handleAllHistory)
 	authorized.POST("/cmd/:devid", a.handleCmd)
 	authorized.Any("/web/:devid/:proto/:addr/*path", a.handleWeb)
 	authorized.Any("/web2/:group/:devid/:proto/:addr/*path", a.handleWeb2)
@@ -384,4 +388,56 @@ func (a *APIServer) handleFile(c *gin.Context) {
 	}
 
 	a.fh.ServeHTTP(c.Writer, c.Request)
+}
+
+func (a *APIServer) handleHistory(c *gin.Context) {
+	deviceID := c.Param("devid")
+	group := c.Query("group")
+	
+	if deviceID == "" && group == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "device id or group required"})
+		return
+	}
+
+	limit := 100
+	if l := c.Query("limit"); l != "" {
+		if n, err := strconv.Atoi(l); err == nil && n > 0 {
+			limit = n
+		}
+	}
+
+	var histories []db.DeviceHistory
+	var err error
+
+	if deviceID != "" {
+		histories, err = db.QueryDeviceHistory(deviceID, limit)
+	} else {
+		histories, err = db.QueryAllDeviceHistory(group, limit)
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, histories)
+}
+
+func (a *APIServer) handleAllHistory(c *gin.Context) {
+	group := c.Query("group")
+	limit := 100
+	
+	if l := c.Query("limit"); l != "" {
+		if n, err := strconv.Atoi(l); err == nil && n > 0 {
+			limit = n
+		}
+	}
+
+	histories, err := db.QueryAllDeviceHistory(group, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, histories)
 }

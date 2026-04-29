@@ -9,10 +9,12 @@ import (
 	"context"
 	_ "net/http/pprof"
 	"os"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 
 	xlog "github.com/zhaojh329/rttys/v5/log"
+	"github.com/zhaojh329/rttys/v5/db"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -165,6 +167,19 @@ func cmdAction(c context.Context, cmd *cli.Command) error {
 	err := cfg.Parse(cmd)
 	if err != nil {
 		return err
+	}
+
+	workDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	dbPath := filepath.Join(workDir, "db", "rttys.db")
+	
+	err = db.Init(dbPath)
+	if err != nil {
+		log.Warn().Msgf("init database failed: %v", err)
+	} else {
+		log.Info().Msgf("database initialized: %s", dbPath)
 	}
 
 	srv := &RttyServer{cfg: cfg}

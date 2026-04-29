@@ -24,6 +24,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 	"github.com/zhaojh329/rtty-go/proto"
+	"github.com/zhaojh329/rttys/v5/db"
 	"github.com/zhaojh329/rttys/v5/utils"
 )
 
@@ -38,14 +39,15 @@ type DeviceInfo struct {
 }
 
 type Device struct {
-	group     string
-	id        string
-	proto     uint8
-	desc      string
-	timestamp int64
-	uptime    uint32
-	token     string
-	heartbeat time.Duration
+	group      string
+	id         string
+	proto      uint8
+	desc       string
+	timestamp  int64
+	uptime     uint32
+	token      string
+	heartbeat  time.Duration
+	historyID  int64
 
 	users    sync.Map
 	pending  sync.Map
@@ -189,6 +191,14 @@ func handleDeviceConnection(srv *RttyServer, conn net.Conn) {
 		return
 	}
 
+	ipAddr := conn.RemoteAddr().(*net.TCPAddr).IP.String()
+	historyID, err := db.RecordDeviceOnline(dev.id, dev.group, dev.desc, ipAddr, dev.proto)
+	if err != nil {
+		log.Error().Err(err).Msgf("record device online failed for device '%s'", dev.id)
+	} else {
+		dev.historyID = historyID
+	}
+
 	log.Info().Msgf("device '%s' registered, group '%s' proto %d, heartbeat %v",
 		dev.id, dev.group, dev.proto, dev.heartbeat)
 
@@ -229,6 +239,12 @@ func (dev *Device) WriteMsg(typ byte, data ...any) error {
 
 func (dev *Device) Close(srv *RttyServer) {
 	dev.close.Do(func() {
+		if dev.historyID != 0 {
+			if err := db.RecordDeviceOffline(dev.historyID); err != nil {
+				log.Error().Err(err).Msgf("record device offline failed for device '%s'", dev.id)
+			}
+		}
+		
 		log.Error().Msgf("device '%s' disconnected", dev.id)
 		srv.DelDevice(dev)
 		dev.cancel()
