@@ -70,10 +70,42 @@ func createTables() error {
 }
 
 func RecordDeviceOnline(devID, group, desc, ipAddr string, proto uint8) (int64, error) {
+	now := time.Now()
+	
+	var id int64
+	var err error
+	
+	rows, err := DB.Query(`
+		SELECT id FROM device_history 
+		WHERE device_id = ? 
+		ORDER BY online_time DESC 
+		LIMIT 1
+	`, devID)
+	
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+	
+	if rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			return 0, err
+		}
+		
+		_, err = DB.Exec(`
+			UPDATE device_history 
+			SET group_name = ?, description = ?, ip_addr = ?, proto = ?, offline_time = NULL, duration = NULL
+			WHERE id = ?
+		`, group, desc, ipAddr, proto, id)
+		
+		return id, err
+	}
+	
 	result, err := DB.Exec(`
 		INSERT INTO device_history (device_id, group_name, description, ip_addr, proto, online_time)
 		VALUES (?, ?, ?, ?, ?, ?)
-	`, devID, group, desc, ipAddr, proto, time.Now())
+	`, devID, group, desc, ipAddr, proto, now)
 
 	if err != nil {
 		return 0, err
@@ -165,7 +197,6 @@ func QueryAllDeviceHistory(group string, limit int) ([]DeviceHistory, error) {
 			SELECT id, device_id, group_name, description, ip_addr, proto, 
 			       online_time, offline_time, duration
 			FROM device_history
-			WHERE offline_time IS NULL
 			ORDER BY online_time DESC
 			LIMIT ?
 		`, limit)
@@ -174,7 +205,7 @@ func QueryAllDeviceHistory(group string, limit int) ([]DeviceHistory, error) {
 			SELECT id, device_id, group_name, description, ip_addr, proto, 
 			       online_time, offline_time, duration
 			FROM device_history
-			WHERE group_name = ? AND offline_time IS NULL
+			WHERE group_name = ?
 			ORDER BY online_time DESC
 			LIMIT ?
 		`, group, limit)

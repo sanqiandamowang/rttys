@@ -97,5 +97,17 @@
   "Whole Word": "Whole Word",
   "Regular": "Regular",
   "Clear Highlighting": "Clear Highlighting",
-  "windows-limit": "Maximum number of windows ({n}) reached"
+  "windows-limit": "Maximum number of windows ({n}) reached",
+  "Back": "Back",
+  "Delete Selected": "Delete Selected",
+  "Delete": "Delete",
+  "No history records": "No history records",
+  "Group": "Group",
+  "IP Address": "IP Address",
+  "Online Time": "Online Time",
+  "Offline Time": "Offline Time",
+  "Online": "Online",
+  "Duration": "Duration",
+  "Actions": "Actions",
+  "History": "History"
 }

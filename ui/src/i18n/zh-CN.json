@@ -97,5 +97,17 @@
   "Whole Word": "匹配整个单词",
   "Regular": "正则匹配",
   "Clear Highlighting": "清除高亮",
-  "windows-limit": "已达到最大窗口数量（{n}个）"
+  "windows-limit": "已达到最大窗口数量（{n}个）",
+  "Back": "返回",
+  "Delete Selected": "删除选中",
+  "Delete": "删除",
+  "No history records": "无历史记录",
+  "Group": "分组",
+  "IP Address": "IP 地址",
+  "Online Time": "上线时间",
+  "Offline Time": "下线时间",
+  "Online": "在线",
+  "Duration": "在线时长",
+  "Actions": "操作",
+  "History": "历史记录"
 }

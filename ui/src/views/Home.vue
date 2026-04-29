@@ -8,6 +8,7 @@
         </el-select>
         <el-input style="width:200px" v-model="filterString" search @input="handleSearch" :placeholder="$t('Please enter the filter key...')"/>
         <el-button @click="showCmdForm" type="primary">{{ $t('Execute command') }}</el-button>
+        <el-button @click="viewAllHistory" type="success" round icon="Document">{{ $t('History') }}</el-button>
       </el-space>
       <el-space>
         <span style="color: var(--el-color-primary); font-size: 24px">{{ $t('device-count', {count: devlists.length}) }}</span>
@@ -60,6 +61,7 @@ import { ref, reactive, computed, onMounted, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { InternetExplorer as IEIcon } from '@vicons/fa'
 import { Terminal as TerminalIcon } from '@vicons/ionicons5'
+import { Document as DocumentIcon } from '@vicons/ionicons5'
 import RttyCmd from '../components/RttyCmd.vue'
 import RttyWeb from '../components/RttyWeb.vue'
 import axios from 'axios'
@@ -170,6 +172,20 @@ const connectDevice = (devid) => {
 const connectDeviceWeb = (dev) => {
   web.dev = dev
   web.modal = true
+}
+
+const viewHistory = (devid) => {
+  let url = `/history/${devid}`
+  if (group.value)
+    url += `?group=${group.value}`
+  window.open(url)
+}
+
+const viewAllHistory = () => {
+  let url = '/history'
+  if (group.value)
+    url += `?group=${group.value}`
+  router.push(url)
 }
 
 const showCmdForm = () => rttyCmd.value.showCmdForm()

@@ -76,6 +76,9 @@ func (srv *RttyServer) ListenAPI() error {
 	authorized.GET("/dev/:devid", a.handleDev)
 	authorized.GET("/history/:devid", a.handleHistory)
 	authorized.GET("/history", a.handleAllHistory)
+	authorized.GET("/api/history/:devid", a.handleHistory)
+	authorized.GET("/api/history", a.handleAllHistory)
+	authorized.POST("/api/history/delete", a.handleDeleteHistories)
 	authorized.POST("/cmd/:devid", a.handleCmd)
 	authorized.Any("/web/:devid/:proto/:addr/*path", a.handleWeb)
 	authorized.Any("/web2/:group/:devid/:proto/:addr/*path", a.handleWeb2)
@@ -393,7 +396,7 @@ func (a *APIServer) handleFile(c *gin.Context) {
 func (a *APIServer) handleHistory(c *gin.Context) {
 	deviceID := c.Param("devid")
 	group := c.Query("group")
-	
+
 	if deviceID == "" && group == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "device id or group required"})
 		return
@@ -426,7 +429,7 @@ func (a *APIServer) handleHistory(c *gin.Context) {
 func (a *APIServer) handleAllHistory(c *gin.Context) {
 	group := c.Query("group")
 	limit := 100
-	
+
 	if l := c.Query("limit"); l != "" {
 		if n, err := strconv.Atoi(l); err == nil && n > 0 {
 			limit = n
@@ -440,4 +443,30 @@ func (a *APIServer) handleAllHistory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, histories)
+}
+
+func (a *APIServer) handleDeleteHistories(c *gin.Context) {
+	var req struct {
+		Ids []int64 `json:"ids"`
+	}
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	if len(req.Ids) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no ids provided"})
+		return
+	}
+
+	for _, id := range req.Ids {
+		_, err := db.DB.Exec("DELETE FROM device_history WHERE id = ?", id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.Status(http.StatusOK)
 }

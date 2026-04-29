@@ -10,6 +10,7 @@ import Login from '../views/Login.vue'
 import Home from '../views/Home.vue'
 import Rtty from '../views/Rtty.vue'
 import Error from '../views/Error.vue'
+import History from '../views/History.vue'
 
 const routes = [
   {
@@ -32,6 +33,12 @@ const routes = [
     path: '/error/:err',
     name: 'Error',
     component: Error,
+    props: true
+  },
+  {
+    path: '/history/:devid?',
+    name: 'History',
+    component: History,
     props: true
   }
 ]
