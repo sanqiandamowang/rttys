@@ -13,8 +13,8 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	xlog "github.com/zhaojh329/rttys/v5/log"
 	"github.com/zhaojh329/rttys/v5/db"
+	xlog "github.com/zhaojh329/rttys/v5/log"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -173,8 +173,8 @@ func cmdAction(c context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
-	dbPath := filepath.Join(workDir, "db", "rttys.db")
-	
+	dbPath := filepath.Join(workDir, "rttys.db")
+
 	err = db.Init(dbPath)
 	if err != nil {
 		log.Warn().Msgf("init database failed: %v", err)
